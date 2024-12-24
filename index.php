@@ -1,9 +1,9 @@
 <?php
 
-$host = 'localhost';
+$host = '62.72.58.198';
 $user = 'root';
 $pass = 'root';
-$dbname = 'nadiashop';
+$dbname = 'nadiaproduk';
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if($conn->connect_error){
