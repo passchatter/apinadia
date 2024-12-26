@@ -58,9 +58,30 @@ if ($method == 'GET') {
         // Handle endpoint 'related'
         $category = $_GET['category'] ?? '';
         $id_produk = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        $sql = "SELECT * FROM produk WHERE category = ? AND id < ? ORDER BY id DESC LIMIT 10";
-        echo execute_query($sql, 'is', [$category, $id_produk]);
-        // ... (logika related tetap sama)
+
+        // Ambil produk dengan ID lebih kecil dari produk saat ini (DESCENDING)
+        $sql1 = "SELECT * FROM produk WHERE category = ? AND id < ? ORDER BY id DESC LIMIT 10";
+        $result1 = json_decode(execute_query($sql1, 'si', [$category, $id_produk]), true);
+
+        // Jika hasil kurang dari 10, cari produk tambahan dengan ID lebih besar (ASCENDING)
+        if (count($result1) < 10) {
+            $limit = 10 - count($result1); // Hitung sisa jumlah produk yang dibutuhkan
+
+            $sql2 = "SELECT * FROM produk WHERE category = ? AND id > ? ORDER BY id ASC LIMIT ?";
+            $result2 = json_decode(execute_query($sql2, 'sii', [$category, $id_produk, $limit]), true);
+
+            // Gabungkan hasil
+            $result1 = array_merge($result1, $result2);
+        }
+
+        // Filter produk untuk menghapus produk yang sama dengan `id_produk`
+        $result1 = array_filter($result1, function ($product) use ($id_produk) {
+            return $product['id'] != $id_produk;
+        });
+
+        // Kembalikan hasil dalam format JSON (reset indeks array)
+        echo json_encode(array_values($result1));
+       
     } elseif ($request === 'filter') {
         $category = $_GET['category'] ?? '';
         $material = $_GET['material'] ?? '';
